@@ -46,6 +46,7 @@ There are two exclusive modes: create repositories and manage teams.  All the ot
 * `-token <token>`: specify the Github personal access token to be used for authentication; see above for how to create it.  If this is not specified, the script will prompt for the token.
 * `-public`: whether to make the created repositories public; this is *not* the default.
 * `-private`: whether to make the created repositories private.  This requires that the organization have that many private repositories available.  This is the default.
+* `-nowatch` or `-unwatch`: whether to have the user (who is identified by the provided token) specifically unwatch the repositories.  The default, if nothing is specified, is that a user watches a repo s/he creates; this option allows one to unwatch a repo.
 
 **CSV file options**
 
@@ -105,10 +106,10 @@ Note that the last column header is 'group', not 'team'; the former is not recog
 First, one would run this to create the repositories:
 
 ```bash
-$ php main.php -create-repos -org superorg -token 1234567890 -csv data.csv
+$ php main.php -create-repos -org superorg -token 1234567890 -csv data.csv -nowatch
 ```
 
-The script will find the 'repo' column, and create all the repos listed there; there are three such repos to be created (repo1, repo2, and repo3).  If they already exist, then it does nothing (but it does indicate that they already exist).  Note that this assumes that the organization name is 'superorg', and that the token provided has already been created properly (see above for details).
+The script will find the 'repo' column, and create all the repos listed there; there are three such repos to be created (repo1, repo2, and repo3).  If they already exist, then it does nothing (but it does indicate that they already exist).  The user specifically does NOT want to watch the repositories that were created, hence the `-nowatch` flag at the end.  Note that this assumes that the organization name is 'superorg', and that the token provided has already been created properly (see above for details).
 
 Next, one could run the script in the following manner to manage the groups:
 

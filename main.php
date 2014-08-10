@@ -9,6 +9,7 @@ $userorg = false;
 $token = false;
 $csvfile = false;
 $public = false;
+$watch = true;
 
 $reposcol = -1;
 $descscol = -1;
@@ -31,7 +32,7 @@ if ( $manageteams )
 
 
 function checkParams() {
-  global $userorg, $token, $csvfile, $reposcol, $descscol, $argv, $argc, $createrepos, $manageteams, $public, $userscol, $teamscol;
+  global $userorg, $token, $csvfile, $reposcol, $descscol, $argv, $argc, $createrepos, $manageteams, $public, $userscol, $teamscol, $watch;
   for ( $i = 1; $i < $argc; $i++ ) {
     switch($argv[$i]) {
     case "-org":
@@ -39,7 +40,7 @@ function checkParams() {
       break;
     case "-token":
       $token = $argv[++$i];
-    break;
+      break;
     case "-create-repos":
       $createrepos = 1;
       break;
@@ -81,6 +82,10 @@ function checkParams() {
       break;
     case "-private":
       $public = false;
+      break;
+    case "-unwatch":
+    case "-nowatch":
+      $watch = false;
       break;
     default:
       die ("Unknown parameter: " . $argv[$i] . "\n");
@@ -153,7 +158,7 @@ function readCSVHeader($fp) {
 }
 
 function createRepos($client) {
-  global $reposcol, $descscol, $csvfile, $userorg, $public;
+  global $reposcol, $descscol, $csvfile, $userorg, $public, $watch;
 
   try {
 
@@ -192,7 +197,7 @@ function createRepos($client) {
 	$repos_to_create[] = $repo;
     echo "Processed repositories to create (" . count($repos_to_create) . "):\n";
     foreach ( $repos_to_create as $repo )
-      echo "\t$repo (\"" . $descriptions[$repo] . "\")\n";
+      echo "\t$repo (\"" . $descriptions[$repo] . "\"): " . (($watch)?"":"NOT ") . "watching\n";
 
     // are there any left?
     if ( count($repos_to_create) == 0 )
@@ -208,6 +213,13 @@ function createRepos($client) {
     foreach ( $repos_to_create as $repo ) {
       $client->api('repo')->create($repo, $descriptions[$repo], "",$public,$userorg);
       echo "Repository '$repo' created!\n";
+      if ( $watch ) {
+	$client->api('current_user')->watchers()->watch($userorg, $repo);
+	echo "\twatched repo '$repo'\n";
+      } else {
+	$client->api('current_user')->watchers()->unwatch($userorg, $repo);
+	echo "\tunwatched repo '$repo'\n";
+      }
     }
 
     fclose($fp);
