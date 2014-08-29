@@ -7,7 +7,9 @@ This repository is a set of tools aimed at letting course instructors configure 
 Installation
 ------------
 
-First, the github-api-tools must be configured.  The quick version is below; the full description can be found in the [original readme](readme-original.md) ([original version from the upstream repo](https://github.com/KnpLabs/php-github-api/blob/master/README.markdown)).
+First, the github-api-tools must be configured.  The quick version is below; the full description can be found in the [original readme](https://raw.githubusercontent.com/aaronbloomfield/github-api-tools/master/readme-original.md) ([original version from the upstream repo](https://raw.githubusercontent.com/KnpLabs/php-github-api/master/README.markdown)).
+
+If you are on Ubuntu, you should install a few packages before you begin these instructions: `sudo apt-get install php5-cli curl php5-curl`
 
 The first step to use `php-github-api` is to download composer:
 
