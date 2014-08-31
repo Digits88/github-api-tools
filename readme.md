@@ -35,12 +35,13 @@ $ php main.php <options>
 Usage
 -----
 
-There are two exclusive modes: create repositories and manage teams.  All the other options provide parameters to one of these two modes.
+There are exclusive modes: create repositories, manage teams, and unwatch.  All the other options provide parameters to one of these modes.  If multiple modes are specified, the only the last one is considered.
 
 **Modes**
 
 * `-create-repos`: Create the repositories specified in the provided CSV file.
 * `-manage-teams`: Manage teams as per the specifications in the provided CSV file.
+* `-unwatch`: Allows unwatching of a number of repos; this is not the same as `-nowatch`.  This uses the `user` and `repo` columns of the CSV file.
 
 **General options**
 
@@ -48,7 +49,7 @@ There are two exclusive modes: create repositories and manage teams.  All the ot
 * `-token <token>`: specify the Github personal access token to be used for authentication; see above for how to create it.  If this is not specified, the script will prompt for the token.
 * `-public`: whether to make the created repositories public; this is *not* the default.
 * `-private`: whether to make the created repositories private.  This requires that the organization have that many private repositories available.  This is the default.
-* `-nowatch` or `-unwatch`: whether to have the user (who is identified by the provided token) specifically unwatch the repositories.  The default, if nothing is specified, is that a user watches a repo s/he creates; this option allows one to unwatch a repo.
+* `-nowatch`: whether to have the user (who is identified by the provided token) specifically unwatch the repositories.  The default, if nothing is specified, is that a user watches a repo s/he creates; this option allows one to unwatch a repo.  This is not the same as `-unwatch`.
 
 **CSV file options**
 

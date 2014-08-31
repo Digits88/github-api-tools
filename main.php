@@ -2,8 +2,12 @@
 
 require_once 'vendor/autoload.php';
 
-$createrepos = 0;
-$manageteams = 0;
+const MODE_NONE = 0;
+const MODE_CREATE = 1;
+const MODE_TEAMS = 2;
+const MODE_UNWATCH = 3;
+
+$mode = MODE_NONE;
 
 $userorg = false;
 $token = false;
@@ -22,17 +26,22 @@ checkParams();
 $client = new \Github\Client(
     new \Github\HttpClient\CachedHttpClient(array('cache_dir' => '/tmp/github-api-cache'))
 );
-$client->authenticate($token,Github\Client::AUTH_HTTP_TOKEN);
+$foo = $client->authenticate($token,Github\Client::AUTH_HTTP_TOKEN);
+print_r($foo);
 
 // take the appropriate action
-if ( $createrepos )
+if ( $mode == MODE_CREATE )
   createRepos($client);
-if ( $manageteams )
+if ( $mode == MODE_TEAMS )
   manageTeams($client);
+if ( $mode == MODE_UNWATCH )
+  unwatch($client);
+
+exit;
 
 
 function checkParams() {
-  global $userorg, $token, $csvfile, $reposcol, $descscol, $argv, $argc, $createrepos, $manageteams, $public, $userscol, $teamscol, $watch;
+  global $userorg, $token, $csvfile, $reposcol, $descscol, $argv, $argc, $public, $userscol, $teamscol, $watch, $mode;
   for ( $i = 1; $i < $argc; $i++ ) {
     switch($argv[$i]) {
     case "-org":
@@ -42,10 +51,13 @@ function checkParams() {
       $token = $argv[++$i];
       break;
     case "-create-repos":
-      $createrepos = 1;
+      $mode = MODE_CREATE;
       break;
     case "-manage-teams":
-      $manageteams = 1;
+      $mode = MODE_TEAMS;
+      break;
+    case "-unwatch":
+      $mode = MODE_UNWATCH;
       break;
     case "-reposcol":
       $reposcol = $argv[++$i];
@@ -83,7 +95,6 @@ function checkParams() {
     case "-private":
       $public = false;
       break;
-    case "-unwatch":
     case "-nowatch":
       $watch = false;
       break;
@@ -93,11 +104,9 @@ function checkParams() {
     }
   }
 
-  if ( !$createrepos && !$manageteams )
-    die ("Nothing to do!  You must specify either -create-repos or -manage-teams\n");
-  if ( $createrepos && $manageteams )
-    die ("You can only specify one mode (-create-repos or -manage-teams), not both\n");
-  if ( !$userorg )
+  if ( $mode == MODE_NONE )
+    die ("Nothing to do!  You must specify either -create-repos, -manage-teams, or -unwatch\n");
+  if ( ($mode != MODE_UNWATCH) && !$userorg )
     die ("You must specify the github user or organization via -userorg\n");
   if ( !$csvfile )
     die ("You must specify a CSV file to use via -csv\n");
@@ -108,7 +117,7 @@ function checkParams() {
 }
 
 function readCSVHeader($fp) {
-  global $reposcol, $descscol, $userscol, $teamscol, $createrepos, $manageteams;
+  global $reposcol, $descscol, $userscol, $teamscol, $mode;
 
   $row = fgetcsv($fp);
   if ( $reposcol != -1 )
@@ -140,20 +149,41 @@ function readCSVHeader($fp) {
     die ("No repos column found (and none specified via -reposcol)\n");
   else
     echo "Using column " . ($reposcol+1) . " with header '" . $row[$reposcol] . "' as the repository list\n";
-  if ( $createrepos )
+  if ( $mode == MODE_CREATE )
     if ( $descscol == -1 )
       echo "No description column found (and none specified via -descscol); continuing without descriptions...\n";
     else
       echo "Using column " . ($descscol+1) . " with header '" . $row[$descscol] . "' as the descriptions list\n";
-  if ( $manageteams ) {
+  if ( ($mode == MODE_TEAMS) || ($mode == MODE_UNWATCH) ) {
     if ( $userscol == -1 )
       die ("No users column found (and none specified via -userscol)\n");
     else
       echo "Using column " . ($userscol+1) . " with header '" . $row[$userscol] . "' as the users list\n";
+  }
+  if ( $mode == MODE_TEAMS ) {
     if ( $teamscol == -1 )
       die ("No teams column found (and none specified via -teamscol)\n");
     else
       echo "Using column " . ($teamscol+1) . " with header '" . $row[$teamscol] . "' as the teams list\n";
+  }
+}
+
+function unwatch($client) {
+  global $reposcol, $userscol, $csvfile;
+  try {
+    $fp = fopen($csvfile,"r");
+    readCSVHeader($fp);
+    while ( ($row = fgetcsv($fp)) ) {
+      try {
+	$client->api('current_user')->watchers()->unwatch($row[$userscol],$row[$reposcol]); 
+	echo "Unwatched " . $row[$userscol] . "/" . $row[$reposcol] . "...\n";
+      } catch (Exception $e) {
+	echo "Repo " . $row[$userscol] . "/" . $row[$reposcol] . " does not exist!\n";
+      }
+    }
+    fclose($fp);
+  } catch (Exception $e) {
+    die ("Exception thrown: " . $e->getMessage() . "\n");
   }
 }
 
