@@ -19,6 +19,7 @@ $reposcol = -1;
 $descscol = -1;
 $userscol = -1;
 $teamscol = -1;
+$apicalls = 0;
 
 checkParams();
 
@@ -27,6 +28,7 @@ $client = new \Github\Client(
     new \Github\HttpClient\CachedHttpClient(array('cache_dir' => '/tmp/github-api-cache'))
 );
 $foo = $client->authenticate($token,Github\Client::AUTH_HTTP_TOKEN);
+$apicalls++;
 print_r($foo);
 
 // take the appropriate action
@@ -37,6 +39,7 @@ if ( $mode == MODE_TEAMS )
 if ( $mode == MODE_UNWATCH )
   unwatch($client);
 
+echo "\nThis execution run used $apicalls Github API calls.\n";
 exit;
 
 
@@ -169,13 +172,14 @@ function readCSVHeader($fp) {
 }
 
 function unwatch($client) {
-  global $reposcol, $userscol, $csvfile;
+  global $reposcol, $userscol, $csvfile, $apicalls;
   try {
     $fp = fopen($csvfile,"r");
     readCSVHeader($fp);
     while ( ($row = fgetcsv($fp)) ) {
       try {
 	$client->api('current_user')->watchers()->unwatch($row[$userscol],$row[$reposcol]); 
+        $apicalls++;
 	echo "Unwatched " . $row[$userscol] . "/" . $row[$reposcol] . "...\n";
       } catch (Exception $e) {
 	echo "Repo " . $row[$userscol] . "/" . $row[$reposcol] . " does not exist!\n";
@@ -188,7 +192,7 @@ function unwatch($client) {
 }
 
 function createRepos($client) {
-  global $reposcol, $descscol, $csvfile, $userorg, $public, $watch;
+  global $reposcol, $descscol, $csvfile, $userorg, $public, $watch, $apicalls;
 
   try {
 
@@ -213,6 +217,7 @@ function createRepos($client) {
     // get the repos in the user/org
     echo "Attempting to read repositories for '$userorg'...\n";
     $tmp = $client->api('organization')->repositories($userorg);
+    $apicalls++;
     $ghrepos = array();
     foreach ( $tmp as $repo )
       $ghrepos[] = $repo['name'];
@@ -242,12 +247,15 @@ function createRepos($client) {
     // create the repo!
     foreach ( $repos_to_create as $repo ) {
       $client->api('repo')->create($repo, $descriptions[$repo], "",$public,$userorg);
+      $apicalls++;
       echo "Repository '$repo' created!\n";
       if ( $watch ) {
 	$client->api('current_user')->watchers()->watch($userorg, $repo);
+        $apicalls++;
 	echo "\twatched repo '$repo'\n";
       } else {
 	$client->api('current_user')->watchers()->unwatch($userorg, $repo);
+        $apicalls++;
 	echo "\tunwatched repo '$repo'\n";
       }
     }
@@ -260,7 +268,7 @@ function createRepos($client) {
 }
 
 function manageTeams($client) {
-  global $reposcol, $teamscol, $userscol, $csvfile, $userorg;
+  global $reposcol, $teamscol, $userscol, $csvfile, $userorg, $apicalls;
 
   try {
 
@@ -282,6 +290,7 @@ function manageTeams($client) {
     // get team data from github
     echo "Attempting to read teams for '$userorg'...\n";
     $tmp = $client->api('organization')->teams()->all($userorg);
+    $apicalls++;
     //print_r($tmp);
     $ghteams = array();
     foreach ( $tmp as $team )
@@ -299,12 +308,14 @@ function manageTeams($client) {
     foreach ( $teams_to_create as $team ) {
       $client->api('organization')->teams()->create($userorg,
 	           array('name'=>$team,'permission'=>'push'));
+      $apicalls++;
       echo "\tteam '$team' on $userorg created!\n";
     }
 
     // get team data (again) from github
     echo "Attempting to read teams (again) for '$userorg'...\n";
     $tmp = $client->api('organization')->teams()->all($userorg);
+    $apicalls++;
     //print_r($tmp);
     $ghteams = array();
     foreach ( $tmp as $team )
@@ -317,29 +328,41 @@ function manageTeams($client) {
     foreach ( $teams as $team ) {
       echo "Setting members for team '$team'...\n";
 
+      // get the team size
+      $tmp = $client->api('organization')->teams()->show($ghteams[$team]);
+      $apicalls++;
+      $team_size = $tmp['members_count'];
+
       // get desired members from CSV file data
       $desired_members = array();
       foreach ( $teamdata as $datum ) {
 	if ( $datum[2] != $team )
 	  continue;
-	if ( !in_array($datum[1],$desired_members) )
-	  $desired_members[] = $datum[1];
+	if ( !in_array(strtolower($datum[1]),$desired_members) )
+	  $desired_members[] = strtolower($datum[1]);
       }
+      sort($desired_members);
       echo "\tdesired members in team '$team' (" . count($desired_members) . "): " . implode(", ",$desired_members) . "\n";
 
       // get actual members from github
-      $tmp = $client->api('organization')->teams()->members($ghteams[$team]);
+      $known_users = 0;
       $actual_members = array();
-      //print_r($tmp);
-      foreach ( $tmp as $user )
-	$actual_members[$user['login']] = $user['id'];
-      echo "\tactual members in team '$team' (" . count($actual_members) . "): " . implode(", ",array_keys($actual_members)) . "\n";
+      for ( $page = 1; count($actual_members) < $team_size; $page++ ) {
+	$tmp = $client->api('organization')->teams()->members($ghteams[$team],$page);
+        $apicalls++;
+	//print_r($tmp);
+	foreach ( $tmp as $user )
+	  $actual_members[strtolower($user['login'])] = $user['id'];
+      }
+      ksort($actual_members);
+      echo "\tactual members in team '$team' (" . count($actual_members) . "):  " . implode(", ",array_keys($actual_members)) . "\n";
       //echo "\tactual members IDs in team '$team' (" . count($actual_members) . "): " . implode(", ",$actual_members) . "\n";
 
       // add members
       foreach ( $desired_members as $member )
-	if ( !in_array($member,array_keys($actual_members)) ) {
+	if ( !in_array(strtolower($member),array_keys($actual_members)) ) {
 	  $client->api('organization')->teams()->addMember($ghteams[$team],$member);
+          $apicalls++;
 	  echo "\tadded $member to team '$team'\n";
 	}
 
@@ -347,6 +370,7 @@ function manageTeams($client) {
       foreach ( array_keys($actual_members) as $member )
 	if ( !in_array($member,$desired_members) ) {
 	  $client->api('organization')->teams()->removeMember($ghteams[$team],$member);
+          $apicalls++;
 	  echo "\tremoved $member from team '$team'\n";
 	}
     }
@@ -368,6 +392,7 @@ function manageTeams($client) {
 
       // get actual repos from github
       $tmp = $client->api('organization')->teams()->repositories($ghteams[$team]);
+      $apicalls++;
       //print_r($tmp);
       $actual_repos = array();
       foreach ( $tmp as $repo )
@@ -378,6 +403,7 @@ function manageTeams($client) {
       foreach ( $desired_repos as $repo )
 	if ( !in_array($repo,array_keys($actual_repos)) ) {
 	  $client->api('organization')->teams()->addRepository($ghteams[$team],$userorg,$repo);
+          $apicalls++;
 	  echo "\tadded $repo to team '$team'\n";
 	}
 
@@ -385,6 +411,7 @@ function manageTeams($client) {
       foreach ( array_keys($actual_repos) as $repo )
 	if ( !in_array($repo,$desired_repos) ) {
 	  $client->api('organization')->teams()->removeRepository($ghteams[$team],$userorg,$repo);
+          $apicalls++;
 	  echo "\tremoved $repo from team '$team'\n";
 	}
     }
