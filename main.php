@@ -39,7 +39,7 @@ if ( $mode == MODE_TEAMS )
 if ( $mode == MODE_UNWATCH )
   unwatch($client);
 
-echo "\nThis execution run used $apicalls Github API calls.\n";
+echo "\nThis execution run called $apicalls Github API calls.\n";
 exit;
 
 
@@ -173,22 +173,27 @@ function readCSVHeader($fp) {
 
 function unwatch($client) {
   global $reposcol, $userscol, $csvfile, $apicalls;
+  $unwatched = 0;
+  $notexistant = 0;
   try {
     $fp = fopen($csvfile,"r");
     readCSVHeader($fp);
     while ( ($row = fgetcsv($fp)) ) {
       try {
-	$client->api('current_user')->watchers()->unwatch($row[$userscol],$row[$reposcol]); 
         $apicalls++;
+	$client->api('current_user')->watchers()->unwatch($row[$userscol],$row[$reposcol]); 
 	echo "Unwatched " . $row[$userscol] . "/" . $row[$reposcol] . "...\n";
+	$unwatched++;
       } catch (Exception $e) {
 	echo "Repo " . $row[$userscol] . "/" . $row[$reposcol] . " does not exist!\n";
+	$notexistant++;
       }
     }
     fclose($fp);
   } catch (Exception $e) {
     die ("Exception thrown: " . $e->getMessage() . "\n");
   }
+  echo "\n$unwatched repos were unwatched, and $notexistant specified repos did not exist.\n";
 }
 
 function createRepos($client) {

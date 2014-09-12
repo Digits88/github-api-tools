@@ -53,11 +53,13 @@ There are exclusive modes: create repositories, manage teams, and unwatch.  All 
 
 **CSV file options**
 
+All columns are indexed from 1.  Note that a given column can be used for multiple fields -- this may happen, for example, when the team name and repo name are the same.
+
 * `-csv <file>`: the name of the CSV file that provides the information for the script to run.  See below for the format.  Note that `-csvfile <file>` is another name for this option.
-* `-reposcol <num>`: the number of the column (indexed from 1) that provides the name of the repositories to create; if not specfied, the script will search for columns with the names: 'repos', 'repo', 'repository', and 'repositories'.
-* `-descscol <num>`: the number of the column (indexed from 1) that provides the descriptions of the repositories to create; if not specfied, the script will search for columns with the names: 'desc', 'descs', 'description', 'descriptions'.
-* `-userscol <num>`: the number of the column (indexed from 1) that provides the github userids for managing the teams; if not specfied, the script will search for columns with the names: 'user', 'users', 'username', 'usernames'.
-* `-teamscol <num>`: the number of the column (indexed from 1) that provides the names of the teams to manage; if not specfied, the script will search for columns with the names: 'team', 'teams'.
+* `-reposcol <num>`: the number of the column that provides the name of the repositories to create; if not specfied, the script will search for columns with the names: 'repos', 'repo', 'repository', and 'repositories'.
+* `-descscol <num>`: the number of the column that provides the descriptions of the repositories to create; if not specfied, the script will search for columns with the names: 'desc', 'descs', 'description', 'descriptions'.
+* `-userscol <num>`: the number of the column that provides the github userids for managing the teams; if not specfied, the script will search for columns with the names: 'user', 'users', 'username', 'usernames'.
+* `-teamscol <num>`: the number of the column that provides the names of the teams to manage; if not specfied, the script will search for columns with the names: 'team', 'teams'.
 
 CSV file format
 ---------------
