@@ -14,6 +14,7 @@ $token = false;
 $csvfile = false;
 $public = false;
 $watch = true;
+$dryrun = false;
 
 $reposcol = -1;
 $descscol = -1;
@@ -44,9 +45,12 @@ exit;
 
 
 function checkParams() {
-  global $userorg, $token, $csvfile, $reposcol, $descscol, $argv, $argc, $public, $userscol, $teamscol, $watch, $mode;
+  global $userorg, $token, $csvfile, $reposcol, $descscol, $argv, $argc, $public, $userscol, $teamscol, $watch, $mode, $dryrun;
   for ( $i = 1; $i < $argc; $i++ ) {
     switch($argv[$i]) {
+    case "-dryrun":
+      $dryrun = true;
+      break;
     case "-org":
       $userorg = $argv[++$i];
       break;
@@ -110,7 +114,7 @@ function checkParams() {
   if ( $mode == MODE_NONE )
     die ("Nothing to do!  You must specify either -create-repos, -manage-teams, or -unwatch\n");
   if ( ($mode != MODE_UNWATCH) && !$userorg )
-    die ("You must specify the github user or organization via -userorg\n");
+    die ("You must specify the github user or organization via -org\n");
   if ( !$csvfile )
     die ("You must specify a CSV file to use via -csv\n");
   if ( !$token ) {
@@ -197,7 +201,7 @@ function unwatch($client) {
 }
 
 function createRepos($client) {
-  global $reposcol, $descscol, $csvfile, $userorg, $public, $watch, $apicalls;
+  global $reposcol, $descscol, $csvfile, $userorg, $public, $watch, $apicalls, $dryrun;
 
   try {
 
@@ -211,6 +215,8 @@ function createRepos($client) {
     while ( ($row = fgetcsv($fp)) ) {
       if ( !in_array($row[$reposcol],$newrepos) ) {
 	$newrepos[] = $row[$reposcol];
+	if ( isset($descriptions[$row[$reposcol]]) ) // only set it once
+	  continue;
 	if ( $descscol != -1 )
 	  $descriptions[$row[$reposcol]] = $row[$descscol];
 	else
@@ -251,15 +257,18 @@ function createRepos($client) {
 
     // create the repo!
     foreach ( $repos_to_create as $repo ) {
-      $client->api('repo')->create($repo, $descriptions[$repo], "",$public,$userorg);
+      if ( !$dryrun )
+	$client->api('repo')->create($repo, $descriptions[$repo], "",$public,$userorg);
       $apicalls++;
       echo "Repository '$repo' created!\n";
       if ( $watch ) {
-	$client->api('current_user')->watchers()->watch($userorg, $repo);
+	if ( !$dryrun )
+	  $client->api('current_user')->watchers()->watch($userorg, $repo);
         $apicalls++;
 	echo "\twatched repo '$repo'\n";
       } else {
-	$client->api('current_user')->watchers()->unwatch($userorg, $repo);
+	if ( !$dryrun )
+	  $client->api('current_user')->watchers()->unwatch($userorg, $repo);
         $apicalls++;
 	echo "\tunwatched repo '$repo'\n";
       }
@@ -273,7 +282,7 @@ function createRepos($client) {
 }
 
 function manageTeams($client) {
-  global $reposcol, $teamscol, $userscol, $csvfile, $userorg, $apicalls;
+  global $reposcol, $teamscol, $userscol, $csvfile, $userorg, $apicalls, $dryrun;
 
   try {
 
@@ -285,6 +294,8 @@ function manageTeams($client) {
     $teamdata = array();
     $teams = array();
     while ( ($row = fgetcsv($fp)) ) {
+      if ( (trim($row[$reposcol]) == "") || (trim($row[$userscol]) == "") || (trim($row[$teamscol]) == "") )
+	continue;
       $teamdata[] = array($row[$reposcol], $row[$userscol], $row[$teamscol]);
       if ( !in_array($row[$teamscol],$teams) )
 	$teams[] = $row[$teamscol];
@@ -311,8 +322,9 @@ function manageTeams($client) {
 
     // create those teams
     foreach ( $teams_to_create as $team ) {
-      $client->api('organization')->teams()->create($userorg,
-	           array('name'=>$team,'permission'=>'push'));
+      if ( !$dryrun )
+	$client->api('organization')->teams()->create($userorg,
+	             array('name'=>$team,'permission'=>'push'));
       $apicalls++;
       echo "\tteam '$team' on $userorg created!\n";
     }
@@ -331,7 +343,7 @@ function manageTeams($client) {
     // for each team, set the members
     echo "\nHandling of member assignments to teams...\n";
     foreach ( $teams as $team ) {
-      echo "Setting members for team '$team'...\n";
+      echo "Checking members for team '$team'...\n";
 
       // get the team size
       $tmp = $client->api('organization')->teams()->show($ghteams[$team]);
@@ -366,7 +378,8 @@ function manageTeams($client) {
       // add members
       foreach ( $desired_members as $member )
 	if ( !in_array(strtolower($member),array_keys($actual_members)) ) {
-	  $client->api('organization')->teams()->addMember($ghteams[$team],$member);
+	  if ( !$dryrun )
+	    $client->api('organization')->teams()->addMember($ghteams[$team],$member);
           $apicalls++;
 	  echo "\tadded $member to team '$team'\n";
 	}
@@ -374,7 +387,8 @@ function manageTeams($client) {
       // remove members
       foreach ( array_keys($actual_members) as $member )
 	if ( !in_array($member,$desired_members) ) {
-	  $client->api('organization')->teams()->removeMember($ghteams[$team],$member);
+	  if ( !$dryrun )
+	    $client->api('organization')->teams()->removeMember($ghteams[$team],$member);
           $apicalls++;
 	  echo "\tremoved $member from team '$team'\n";
 	}
@@ -383,7 +397,7 @@ function manageTeams($client) {
     // for each team, set the repos
     echo "\nHandling of repo assignments to teams...\n";
     foreach ( $teams as $team ) {
-      echo "Setting repos for team '$team'...\n";
+      echo "Checking repos for team '$team'...\n";
 
       // get desired repos from CSV file data
       $desired_repos = array();
@@ -407,7 +421,8 @@ function manageTeams($client) {
       // add repos
       foreach ( $desired_repos as $repo )
 	if ( !in_array($repo,array_keys($actual_repos)) ) {
-	  $client->api('organization')->teams()->addRepository($ghteams[$team],$userorg,$repo);
+	  if ( !$dryrun )
+	    $client->api('organization')->teams()->addRepository($ghteams[$team],$userorg,$repo);
           $apicalls++;
 	  echo "\tadded $repo to team '$team'\n";
 	}
@@ -415,7 +430,8 @@ function manageTeams($client) {
       // remove repos
       foreach ( array_keys($actual_repos) as $repo )
 	if ( !in_array($repo,$desired_repos) ) {
-	  $client->api('organization')->teams()->removeRepository($ghteams[$team],$userorg,$repo);
+	  if ( !$dryrun )
+	    $client->api('organization')->teams()->removeRepository($ghteams[$team],$userorg,$repo);
           $apicalls++;
 	  echo "\tremoved $repo from team '$team'\n";
 	}
