@@ -258,7 +258,7 @@ function listIssues($client) {
   else
     $fp = fopen("php://stdout", "w");
   foreach ( $issues as $issue ) {
-    fwrite ($fp, $userorg . "," . $repo . "," . $issue['number'] . "," . $issue['state'] . ",\"" . str_replace("\t"," ",$issue['title']) . "\",\"" . implode(",",$issue['labels']) . "\"\n");
+    fwrite ($fp, $userorg . "," . $repo . "," . $issue['number'] . "," . $issue['state'] . ",\"" . str_replace("\t"," ",str_replace('"','\\"',$issue['title'])) . "\",\"" . implode(",",$issue['labels']) . "\"\n");
   }
   fclose($fp);
 }
