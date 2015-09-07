@@ -6,6 +6,7 @@ APIs:
 * [Commits](commits.md)
 * [Enterprise](enterprise.md)
 * [Gists](gists.md)
+  * [Comments](gists/comments.md)
 * [Issues](issues.md)
   * [Comments](issue/comments.md)
   * [Labels](issue/labels.md)
@@ -18,8 +19,10 @@ APIs:
   * [Contents](repo/contents.md)
   * [Releases](repo/releases.md)
     * [Assets](repo/assets.md)
+  * [Deployments](repo/deployments.md)
 * [Users](users.md)
 * [Meta](meta.md)
+* [Activity](activity.md)
 
 Additional features:
 

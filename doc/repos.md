@@ -1,5 +1,5 @@
 ## Repositories API
-[Back to the navigation](index.md)
+[Back to the navigation](README.md)
 
 Searching repositories, getting repository information and managing repository information for authenticated users.
 Wrap [GitHub Repo API](http://developer.github.com/v3/repos/). All methods are described on that page.
@@ -212,7 +212,7 @@ Returns list of the forks of the 'php-github-api' owned by 'ornicar', including 
 ### Get the languages for a repository
 
 ```php
-$contributors = $client->api('repo')->languages('ornicar', 'php-github-api');
+$languages = $client->api('repo')->languages('ornicar', 'php-github-api');
 ```
 
 Returns a list of languages.
@@ -238,3 +238,22 @@ $activity = $client->api('repo')->activity('ornicar', 'php-github-api');
 ```
 
 Returns an array of commit activity group by week.
+
+### `Moved` repositories
+Github repositories can be moved to another org/user, but it remains the `id`.
+In case if you can't no more find repo, you can retrieve it by `id`:
+
+```php
+use Github\HttpClient\Message\ResponseMediator;
+
+$data = $client->getHttpClient()->get('/repositories/24560307');
+$repo = ResponseMediator::getContent($data);
+```
+
+### Get the milestones of a repository
+
+```php
+milestones = $client->api('repo')->milestones('ornicar', 'php-github-api');
+```
+
+Returns a list of milestones.
