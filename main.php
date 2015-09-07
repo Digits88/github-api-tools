@@ -177,11 +177,12 @@ function readCSVHeader($fp) {
     die ("No repos column found (and none specified via -reposcol)\n");
   else
     echo "Using column " . ($reposcol+1) . " with header '" . $row[$reposcol] . "' as the repository list\n";
-  if ( $mode == MODE_CREATE )
+  if ( ($mode == MODE_CREATE) || ($mode == MODE_TEAMS) ) {
     if ( $descscol == -1 )
       echo "No description column found (and none specified via -descscol); continuing without descriptions...\n";
     else
       echo "Using column " . ($descscol+1) . " with header '" . $row[$descscol] . "' as the descriptions list\n";
+  }
   if ( ($mode == MODE_TEAMS) || ($mode == MODE_UNWATCH) ) {
     if ( $userscol == -1 )
       die ("No users column found (and none specified via -userscol)\n");
@@ -345,7 +346,7 @@ function createRepos($client) {
 }
 
 function manageTeams($client) {
-  global $reposcol, $teamscol, $userscol, $csvfile, $userorg, $apicalls, $dryrun;
+  global $reposcol, $teamscol, $userscol, $descscol, $csvfile, $userorg, $apicalls, $dryrun;
 
   try {
 
@@ -356,12 +357,20 @@ function manageTeams($client) {
     // read in the team data from CSV
     $teamdata = array();
     $teams = array();
+    $descriptions = array();
     while ( ($row = fgetcsv($fp)) ) {
-      if ( (trim($row[$reposcol]) == "") || (trim($row[$userscol]) == "") || (trim($row[$teamscol]) == "") )
+      if ( //(trim($row[$reposcol]) == "") || // we allow a blank repo
+	   //(trim($row[$userscol]) == "") || // we allow a blank github userid
+	   (trim($row[$teamscol]) == "") 
+	   )
 	continue;
       $teamdata[] = array($row[$reposcol], $row[$userscol], $row[$teamscol]);
       if ( !in_array($row[$teamscol],$teams) )
 	$teams[] = $row[$teamscol];
+      if ( $descscol != -1 )
+	$descriptions[$row[$teamscol]] = $row[$descscol];
+      else
+	$descriptions[$row[$teamscol]] = "no description";
     }
 
     echo "\nHandling of team creation...\n";
@@ -387,9 +396,9 @@ function manageTeams($client) {
     foreach ( $teams_to_create as $team ) {
       if ( !$dryrun )
 	$client->api('organization')->teams()->create($userorg,
-	             array('name'=>$team,'permission'=>'push'));
+						      array('name'=>$team,'description'=>$descriptions[$team],'permission'=>'push'));
       $apicalls++;
-      echo "\tteam '$team' on $userorg created!\n";
+      echo "\tteam '$team' on $userorg created (with write access)\n";
     }
 
     // get team data (again) from github
@@ -418,6 +427,8 @@ function manageTeams($client) {
       foreach ( $teamdata as $datum ) {
 	if ( $datum[2] != $team )
 	  continue;
+	if ( $datum[1] == "" )
+	  continue; // no userid
 	if ( !in_array(strtolower($datum[1]),$desired_members) )
 	  $desired_members[] = strtolower($datum[1]);
       }

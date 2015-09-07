@@ -57,7 +57,7 @@ All columns are indexed from 1.  Note that a given column can be used for multip
 
 * `-csv <file>`: the name of the CSV file that provides the information for the script to run.  See below for the format.  Note that `-csvfile <file>` is another name for this option.
 * `-reposcol <num>`: the number of the column that provides the name of the repositories to create; if not specfied, the script will search for columns with the names: 'repos', 'repo', 'repository', and 'repositories'.
-* `-descscol <num>`: the number of the column that provides the descriptions of the repositories to create; if not specfied, the script will search for columns with the names: 'desc', 'descs', 'description', 'descriptions'.
+* `-descscol <num>`: the number of the column that provides the descriptions of the repositories or teams to create; if not specfied, the script will search for columns with the names: 'desc', 'descs', 'description', 'descriptions'.  The script either creates teams or repos, but not both; thus, the description is used for whichever is being created.
 * `-userscol <num>`: the number of the column that provides the github userids for managing the teams; if not specfied, the script will search for columns with the names: 'user', 'users', 'username', 'usernames'.
 * `-teamscol <num>`: the number of the column that provides the names of the teams to manage; if not specfied, the script will search for columns with the names: 'team', 'teams'.
 
@@ -138,3 +138,7 @@ Notes
 * If the repositories are not created when setting up the teams, the script will crash.
 * If you just want to create the teams, but not set up the repos, you can leave the repo name blank (but the repo column must still be present); however, this will REMOVE any repos that the team currently has access to
 
+Bugs
+----
+
+* If a member has already been invited to a group, and their membership is pending, it does not detect this, and tries to add this again; this results in a caught exception (and the script continues)
