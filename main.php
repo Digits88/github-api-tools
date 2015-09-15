@@ -266,6 +266,7 @@ function listIssues($client) {
 
 function createRepos($client) {
   global $reposcol, $descscol, $csvfile, $userorg, $public, $watch, $apicalls, $dryrun;
+  $paginator = new Github\ResultPager($client);
 
   try {
 
@@ -291,10 +292,10 @@ function createRepos($client) {
 
     // get the repos in the user/org
     echo "Attempting to read repositories for '$userorg'...\n";
-    $tmp = $client->api('organization')->repositories($userorg);
+    $repos = $paginator->fetchAll($client->api('organization'),'repositories',array('uva-slp'));
     $apicalls++;
     $ghrepos = array();
-    foreach ( $tmp as $repo )
+    foreach ( $repos as $repo )
       $ghrepos[] = $repo['name'];
     echo "Repositories on github.com/$userorg (" . count($ghrepos) . "): " . implode(", ",$ghrepos) . "\n";
 
