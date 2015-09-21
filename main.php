@@ -292,7 +292,7 @@ function createRepos($client) {
 
     // get the repos in the user/org
     echo "Attempting to read repositories for '$userorg'...\n";
-    $repos = $paginator->fetchAll($client->api('organization'),'repositories',array('uva-slp'));
+    $repos = $paginator->fetchAll($client->api('organization'),'repositories',array($userorg));
     $apicalls++;
     $ghrepos = array();
     foreach ( $repos as $repo )
@@ -348,6 +348,7 @@ function createRepos($client) {
 
 function manageTeams($client) {
   global $reposcol, $teamscol, $userscol, $descscol, $csvfile, $userorg, $apicalls, $dryrun;
+  $paginator = new Github\ResultPager($client);
 
   try {
 
@@ -378,9 +379,9 @@ function manageTeams($client) {
 
     // get team data from github
     echo "Attempting to read teams for '$userorg'...\n";
-    $tmp = $client->api('organization')->teams()->all($userorg);
+    //$tmp = $client->api('organization')->teams()->all($userorg);
+    $tmp = $paginator->fetchAll($client->api('organization')->teams(),'all',array($userorg));
     $apicalls++;
-    //print_r($tmp);
     $ghteams = array();
     foreach ( $tmp as $team )
       $ghteams[$team['name']] = $team['id'];
@@ -404,7 +405,8 @@ function manageTeams($client) {
 
     // get team data (again) from github
     echo "Attempting to read teams (again) for '$userorg'...\n";
-    $tmp = $client->api('organization')->teams()->all($userorg);
+    //$tmp = $client->api('organization')->teams()->all($userorg);
+    $tmp = $paginator->fetchAll($client->api('organization')->teams(),'all',array($userorg));
     $apicalls++;
     //print_r($tmp);
     $ghteams = array();
