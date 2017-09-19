@@ -16,22 +16,32 @@ use Github\Api\Organization\Teams;
 class Organization extends AbstractApi
 {
     /**
+     * @link https://developer.github.com/v3/orgs/#list-all-organizations
+     *
+     * @return array the organizations
+     */
+    public function all($since = '')
+    {
+        return $this->get('/organizations?since='.rawurlencode($since));
+    }
+
+    /**
      * Get extended information about an organization by its name.
      *
      * @link http://developer.github.com/v3/orgs/#get
      *
      * @param string $organization the organization to show
      *
-     * @return array informations about the organization
+     * @return array information about the organization
      */
     public function show($organization)
     {
-        return $this->get('orgs/'.rawurlencode($organization));
+        return $this->get('/orgs/'.rawurlencode($organization));
     }
 
     public function update($organization, array $params)
     {
-        return $this->patch('orgs/'.rawurlencode($organization), $params);
+        return $this->patch('/orgs/'.rawurlencode($organization), $params);
     }
 
     /**
@@ -41,13 +51,15 @@ class Organization extends AbstractApi
      *
      * @param string $organization the user name
      * @param string $type         the type of repositories
+     * @param int    $page         the page
      *
      * @return array the repositories
      */
-    public function repositories($organization, $type = 'all')
+    public function repositories($organization, $type = 'all', $page = 1)
     {
-        return $this->get('orgs/'.rawurlencode($organization).'/repos', array(
-            'type' => $type
+        return $this->get('/orgs/'.rawurlencode($organization).'/repos', array(
+            'type' => $type,
+            'page' => $page,
         ));
     }
 
@@ -86,6 +98,6 @@ class Organization extends AbstractApi
      */
     public function issues($organization, array $params = array(), $page = 1)
     {
-        return $this->get('orgs/'.rawurlencode($organization).'/issues', array_merge(array('page' => $page), $params));
+        return $this->get('/orgs/'.rawurlencode($organization).'/issues', array_merge(array('page' => $page), $params));
     }
 }

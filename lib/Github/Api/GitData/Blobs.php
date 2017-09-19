@@ -3,26 +3,32 @@
 namespace Github\Api\GitData;
 
 use Github\Api\AbstractApi;
+use Github\Api\AcceptHeaderTrait;
 use Github\Exception\MissingArgumentException;
 
 /**
  * @link   http://developer.github.com/v3/git/blobs/
  * @author Joseph Bielawski <stloyd@gmail.com>
+ * @author Tobias Nyholm <tobias.nyholm@gmail.com>
  */
 class Blobs extends AbstractApi
 {
+    use AcceptHeaderTrait;
+
     /**
-     * Configure the Acccept header depending on the blob type.
+     * Configure the Accept header depending on the blob type.
      *
      * @param string|null $bodyType
+     *
+     * @return self
      */
     public function configure($bodyType = null)
     {
-        if ('raw' == $bodyType) {
-            $this->client->setHeaders(array(
-                'Accept' => sprintf('application/vnd.github.%s.raw', $this->client->getOption('api_version'))
-            ));
+        if ('raw' === $bodyType) {
+            $this->acceptHeaderValue = sprintf('application/vnd.github.%s.raw', $this->client->getApiVersion());
         }
+
+        return $this;
     }
 
     /**
@@ -36,7 +42,7 @@ class Blobs extends AbstractApi
      */
     public function show($username, $repository, $sha)
     {
-        $response = $this->get('repos/'.rawurlencode($username).'/'.rawurlencode($repository).'/git/blobs/'.rawurlencode($sha));
+        $response = $this->get('/repos/'.rawurlencode($username).'/'.rawurlencode($repository).'/git/blobs/'.rawurlencode($sha));
 
         return $response;
     }
@@ -58,6 +64,6 @@ class Blobs extends AbstractApi
             throw new MissingArgumentException(array('content', 'encoding'));
         }
 
-        return $this->post('repos/'.rawurlencode($username).'/'.rawurlencode($repository).'/git/blobs', $params);
+        return $this->post('/repos/'.rawurlencode($username).'/'.rawurlencode($repository).'/git/blobs', $params);
     }
 }

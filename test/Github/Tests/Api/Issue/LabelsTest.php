@@ -19,7 +19,7 @@ class LabelsTest extends TestCase
         $api = $this->getApiMock();
         $api->expects($this->once())
             ->method('get')
-            ->with('repos/KnpLabs/php-github-api/labels', array())
+            ->with('/repos/KnpLabs/php-github-api/labels', array())
             ->will($this->returnValue($expectedValue));
 
         $this->assertEquals($expectedValue, $api->all('KnpLabs', 'php-github-api'));
@@ -35,7 +35,7 @@ class LabelsTest extends TestCase
         $api = $this->getApiMock();
         $api->expects($this->once())
             ->method('get')
-            ->with('repos/KnpLabs/php-github-api/issues/123/labels')
+            ->with('/repos/KnpLabs/php-github-api/issues/123/labels')
             ->will($this->returnValue($expectedValue));
 
         $this->assertEquals($expectedValue, $api->all('KnpLabs', 'php-github-api', '123'));
@@ -52,10 +52,26 @@ class LabelsTest extends TestCase
         $api = $this->getApiMock();
         $api->expects($this->once())
             ->method('post')
-            ->with('repos/KnpLabs/php-github-api/labels', $data + array('color' => 'FFFFFF'))
+            ->with('/repos/KnpLabs/php-github-api/labels', $data + array('color' => 'FFFFFF'))
             ->will($this->returnValue($expectedValue));
 
         $this->assertEquals($expectedValue, $api->create('KnpLabs', 'php-github-api', $data));
+    }
+
+    /**
+     * @test
+     */
+    public function shouldGetSingleLabel()
+    {
+        $expectedValue = array(array('name' => 'label1'));
+
+        $api = $this->getApiMock();
+        $api->expects($this->once())
+            ->method('get')
+            ->with('/repos/KnpLabs/php-github-api/labels/label1')
+            ->will($this->returnValue($expectedValue));
+
+        $this->assertEquals($expectedValue, $api->show('KnpLabs', 'php-github-api', 'label1'));
     }
 
     /**
@@ -69,7 +85,7 @@ class LabelsTest extends TestCase
         $api = $this->getApiMock();
         $api->expects($this->once())
             ->method('post')
-            ->with('repos/KnpLabs/php-github-api/labels', $data)
+            ->with('/repos/KnpLabs/php-github-api/labels', $data)
             ->will($this->returnValue($expectedValue));
 
         $this->assertEquals($expectedValue, $api->create('KnpLabs', 'php-github-api', $data));
@@ -85,7 +101,7 @@ class LabelsTest extends TestCase
         $api = $this->getApiMock();
         $api->expects($this->once())
             ->method('delete')
-            ->with('repos/KnpLabs/php-github-api/labels/foo')
+            ->with('/repos/KnpLabs/php-github-api/labels/foo')
             ->will($this->returnValue($expectedValue));
 
         $this->assertEquals($expectedValue, $api->deleteLabel('KnpLabs', 'php-github-api', 'foo'));
@@ -102,7 +118,7 @@ class LabelsTest extends TestCase
         $api = $this->getApiMock();
         $api->expects($this->once())
             ->method('patch')
-            ->with('repos/KnpLabs/php-github-api/labels/foo', $data)
+            ->with('/repos/KnpLabs/php-github-api/labels/foo', $data)
             ->will($this->returnValue($expectedValue));
 
         $this->assertEquals($expectedValue, $api->update('KnpLabs', 'php-github-api', 'foo', 'bar', 'FFF'));
@@ -118,7 +134,7 @@ class LabelsTest extends TestCase
         $api = $this->getApiMock();
         $api->expects($this->once())
             ->method('delete')
-            ->with('repos/KnpLabs/php-github-api/issues/123/labels/somename')
+            ->with('/repos/KnpLabs/php-github-api/issues/123/labels/somename')
             ->will($this->returnValue($expectedValue));
 
         $this->assertEquals($expectedValue, $api->remove('KnpLabs', 'php-github-api', 123, 'somename'));
@@ -134,7 +150,7 @@ class LabelsTest extends TestCase
         $api = $this->getApiMock();
         $api->expects($this->once())
             ->method('post')
-            ->with('repos/KnpLabs/php-github-api/issues/123/labels', array('labelname'))
+            ->with('/repos/KnpLabs/php-github-api/issues/123/labels', array('labelname'))
             ->will($this->returnValue($expectedValue));
 
         $this->assertEquals($expectedValue, $api->add('KnpLabs', 'php-github-api', 123, 'labelname'));
@@ -150,7 +166,7 @@ class LabelsTest extends TestCase
         $api = $this->getApiMock();
         $api->expects($this->once())
             ->method('post')
-            ->with('repos/KnpLabs/php-github-api/issues/123/labels', array('labelname', 'labelname2'))
+            ->with('/repos/KnpLabs/php-github-api/issues/123/labels', array('labelname', 'labelname2'))
             ->will($this->returnValue($expectedValue));
 
         $this->assertEquals($expectedValue, $api->add('KnpLabs', 'php-github-api', 123, array('labelname', 'labelname2')));
@@ -167,7 +183,7 @@ class LabelsTest extends TestCase
         $api = $this->getApiMock();
         $api->expects($this->once())
             ->method('put')
-            ->with('repos/KnpLabs/php-github-api/issues/123/labels', $data)
+            ->with('/repos/KnpLabs/php-github-api/issues/123/labels', $data)
             ->will($this->returnValue($expectedValue));
 
         $this->assertEquals($expectedValue, $api->replace('KnpLabs', 'php-github-api', 123, $data));
@@ -196,14 +212,17 @@ class LabelsTest extends TestCase
         $api = $this->getApiMock();
         $api->expects($this->once())
             ->method('delete')
-            ->with('repos/KnpLabs/php-github-api/issues/123/labels')
+            ->with('/repos/KnpLabs/php-github-api/issues/123/labels')
             ->will($this->returnValue($expectedValue));
 
         $this->assertEquals($expectedValue, $api->clear('KnpLabs', 'php-github-api', 123));
     }
 
+    /**
+     * @return string
+     */
     protected function getApiClass()
     {
-        return 'Github\Api\Issue\Labels';
+        return \Github\Api\Issue\Labels::class;
     }
 }

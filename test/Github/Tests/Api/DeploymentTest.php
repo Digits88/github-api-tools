@@ -13,7 +13,7 @@ class DeploymentTest extends TestCase
         $deploymentData = array('ref' => 'fd6a5f9e5a430dddae8d6a8ea378f913d3a766f9');
         $api->expects($this->once())
             ->method('post')
-            ->with('repos/KnpLabs/php-github-api/deployments', $deploymentData);
+            ->with('/repos/KnpLabs/php-github-api/deployments', $deploymentData);
 
         $api->create('KnpLabs', 'php-github-api', $deploymentData);
     }
@@ -26,7 +26,7 @@ class DeploymentTest extends TestCase
         $api = $this->getApiMock();
         $api->expects($this->once())
             ->method('get')
-            ->with('repos/KnpLabs/php-github-api/deployments');
+            ->with('/repos/KnpLabs/php-github-api/deployments');
 
         $api->all('KnpLabs', 'php-github-api');
     }
@@ -41,9 +41,25 @@ class DeploymentTest extends TestCase
 
         $api->expects($this->once())
             ->method('get')
-            ->with('repos/KnpLabs/php-github-api/deployments', $filterData);
+            ->with('/repos/KnpLabs/php-github-api/deployments', $filterData);
 
         $api->all('KnpLabs', 'php-github-api', $filterData);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldShowProject()
+    {
+        $expectedValue = array('id' => 123, 'ref' => 'master');
+
+        $api = $this->getApiMock();
+        $api->expects($this->once())
+            ->method('get')
+            ->with('/repos/KnpLabs/php-github-api/deployments/123')
+            ->will($this->returnValue($expectedValue));
+
+        $this->assertEquals($expectedValue, $api->show('KnpLabs', 'php-github-api', 123));
     }
 
     /**
@@ -56,7 +72,7 @@ class DeploymentTest extends TestCase
 
         $api->expects($this->once())
             ->method('post')
-            ->with('repos/KnpLabs/php-github-api/deployments/1/statuses', $statusData);
+            ->with('/repos/KnpLabs/php-github-api/deployments/1/statuses', $statusData);
 
         $api->updateStatus('KnpLabs', 'php-github-api', 1, $statusData);
     }
@@ -81,13 +97,16 @@ class DeploymentTest extends TestCase
         $api = $this->getApiMock();
         $api->expects($this->once())
             ->method('get')
-            ->with('repos/KnpLabs/php-github-api/deployments/1/statuses');
+            ->with('/repos/KnpLabs/php-github-api/deployments/1/statuses');
 
         $api->getStatuses('KnpLabs', 'php-github-api', 1);
     }
 
+    /**
+     * @return string
+     */
     protected function getApiClass()
     {
-        return 'Github\Api\Deployment';
+        return \Github\Api\Deployment::class;
     }
 }

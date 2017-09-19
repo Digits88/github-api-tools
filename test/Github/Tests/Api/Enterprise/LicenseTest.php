@@ -23,14 +23,17 @@ class LicenseTest extends TestCase
         $api = $this->getApiMock();
         $api->expects($this->once())
             ->method('get')
-            ->with('enterprise/settings/license')
+            ->with('/enterprise/settings/license')
             ->will($this->returnValue($expectedArray));
 
         $this->assertEquals($expectedArray, $api->show());
     }
 
+    /**
+     * @return string
+     */
     protected function getApiClass()
     {
-        return 'Github\Api\Enterprise\License';
+        return \Github\Api\Enterprise\License::class;
     }
 }

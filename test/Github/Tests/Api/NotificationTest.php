@@ -19,7 +19,7 @@ class NotificationTest extends TestCase
         $api = $this->getApiMock();
         $api->expects($this->once())
             ->method('get')
-            ->with('notifications', $parameters);
+            ->with('/notifications', $parameters);
 
         $api->all();
     }
@@ -40,7 +40,7 @@ class NotificationTest extends TestCase
         $api = $this->getApiMock();
         $api->expects($this->once())
             ->method('get')
-            ->with('notifications', $parameters);
+            ->with('/notifications', $parameters);
 
         $api->all(false, false, $since);
     }
@@ -58,7 +58,7 @@ class NotificationTest extends TestCase
         $api = $this->getApiMock();
         $api->expects($this->once())
             ->method('get')
-            ->with('notifications', $parameters);
+            ->with('/notifications', $parameters);
 
         $api->all(true, true);
     }
@@ -73,7 +73,7 @@ class NotificationTest extends TestCase
         $api = $this->getApiMock();
         $api->expects($this->once())
             ->method('put')
-            ->with('notifications', $parameters);
+            ->with('/notifications', $parameters);
 
         $api->markRead();
     }
@@ -92,13 +92,27 @@ class NotificationTest extends TestCase
         $api = $this->getApiMock();
         $api->expects($this->once())
             ->method('put')
-            ->with('notifications', $parameters);
+            ->with('/notifications', $parameters);
 
         $api->markRead($since);
     }
+    
+    public function shouldGetNotification()
+    {
+        $id = mt_rand(1, time());
+        $api = $this->getApiMock();
+        $api->expects($this->once())
+            ->method('get')
+            ->with('/notification/'.$id);
 
+        $api->id($id);
+    }
+
+    /**
+     * @return string
+     */
     protected function getApiClass()
     {
-        return 'Github\Api\Notification';
+        return \Github\Api\Notification::class;
     }
 }

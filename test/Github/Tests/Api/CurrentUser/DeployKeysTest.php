@@ -14,7 +14,7 @@ class DeployKeysTest extends TestCase
         $api = $this->getApiMock();
         $api->expects($this->once())
             ->method('get')
-            ->with('user/keys/12')
+            ->with('/user/keys/12')
             ->will($this->returnValue($expectedValue));
 
         $this->assertEquals($expectedValue, $api->show(12));
@@ -30,7 +30,7 @@ class DeployKeysTest extends TestCase
         $api = $this->getApiMock();
         $api->expects($this->once())
             ->method('get')
-            ->with('user/keys')
+            ->with('/user/keys')
             ->will($this->returnValue($expectedValue));
 
         $this->assertEquals($expectedValue, $api->all());
@@ -47,7 +47,7 @@ class DeployKeysTest extends TestCase
         $api = $this->getApiMock();
         $api->expects($this->once())
             ->method('post')
-            ->with('user/keys', $data)
+            ->with('/user/keys', $data)
             ->will($this->returnValue($expectedValue));
 
         $this->assertEquals($expectedValue, $api->create($data));
@@ -86,53 +86,6 @@ class DeployKeysTest extends TestCase
     /**
      * @test
      */
-    public function shouldUpdateKey()
-    {
-        $expectedValue = array('id' => '123', 'key' => 'ssh-rsa ...');
-        $data = array('title' => 'my key', 'key' => 'ssh-rsa ...');
-
-        $api = $this->getApiMock();
-        $api->expects($this->once())
-            ->method('patch')
-            ->with('user/keys/123', $data)
-            ->will($this->returnValue($expectedValue));
-
-        $this->assertEquals($expectedValue, $api->update(123, $data));
-    }
-
-    /**
-     * @test
-     * @expectedException \Github\Exception\MissingArgumentException
-     */
-    public function shouldNotUpdateKeyWithoutTitleParam()
-    {
-        $data = array('key' => 'ssh-rsa ...');
-
-        $api = $this->getApiMock();
-        $api->expects($this->never())
-            ->method('patch');
-
-        $api->update(123, $data);
-    }
-
-    /**
-     * @test
-     * @expectedException \Github\Exception\MissingArgumentException
-     */
-    public function shouldNotUpdateKeyWithoutKeyParam()
-    {
-        $data = array('title' => 'my key');
-
-        $api = $this->getApiMock();
-        $api->expects($this->never())
-            ->method('patch');
-
-        $api->update(123, $data);
-    }
-
-    /**
-     * @test
-     */
     public function shouldRemoveKey()
     {
         $expectedValue = array('some value');
@@ -140,14 +93,17 @@ class DeployKeysTest extends TestCase
         $api = $this->getApiMock();
         $api->expects($this->once())
             ->method('delete')
-            ->with('user/keys/123')
+            ->with('/user/keys/123')
             ->will($this->returnValue($expectedValue));
 
         $this->assertEquals($expectedValue, $api->remove(123));
     }
 
+    /**
+     * @return string
+     */
     protected function getApiClass()
     {
-        return 'Github\Api\CurrentUser\DeployKeys';
+        return \Github\Api\CurrentUser\PublicKeys::class;
     }
 }

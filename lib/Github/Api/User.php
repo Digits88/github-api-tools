@@ -22,7 +22,7 @@ class User extends AbstractApi
      */
     public function find($keyword)
     {
-        return $this->get('legacy/user/search/'.rawurlencode($keyword));
+        return $this->get('/legacy/user/search/'.rawurlencode($keyword));
     }
 
     /**
@@ -37,9 +37,10 @@ class User extends AbstractApi
     public function all($id = null)
     {
         if (!is_int($id)) {
-            return $this->get('users');
+            return $this->get('/users');
         }
-        return $this->get('users?since=' . rawurldecode($id));
+
+        return $this->get('/users', ['since' => rawurldecode($id)]);
     }
 
     /**
@@ -49,11 +50,11 @@ class User extends AbstractApi
      *
      * @param string $username the username to show
      *
-     * @return array informations about the user
+     * @return array information about the user
      */
     public function show($username)
     {
-        return $this->get('users/'.rawurlencode($username));
+        return $this->get('/users/'.rawurlencode($username));
     }
 
     /**
@@ -67,9 +68,20 @@ class User extends AbstractApi
      */
     public function organizations($username)
     {
-        return $this->get('users/'.rawurlencode($username).'/orgs');
+        return $this->get('/users/'.rawurlencode($username).'/orgs');
     }
 
+    /**
+     * Get user organizations
+     *
+     * @link https://developer.github.com/v3/orgs/#list-your-organizations
+     *
+     * @return array information about organizations that authenticated user belongs to
+     */
+    public function orgs()
+    {
+        return $this->get('/user/orgs');
+    }
     /**
      * Request the users that a specific user is following.
      *
@@ -81,7 +93,7 @@ class User extends AbstractApi
      */
     public function following($username)
     {
-        return $this->get('users/'.rawurlencode($username).'/following');
+        return $this->get('/users/'.rawurlencode($username).'/following');
     }
 
     /**
@@ -95,7 +107,7 @@ class User extends AbstractApi
      */
     public function followers($username)
     {
-        return $this->get('users/'.rawurlencode($username).'/followers');
+        return $this->get('/users/'.rawurlencode($username).'/followers');
     }
 
     /**
@@ -109,7 +121,7 @@ class User extends AbstractApi
      */
     public function watched($username)
     {
-        return $this->get('users/'.rawurlencode($username).'/watched');
+        return $this->get('/users/'.rawurlencode($username).'/watched');
     }
 
     /**
@@ -117,15 +129,21 @@ class User extends AbstractApi
      *
      * @link http://developer.github.com/v3/activity/starring/
      *
-     * @param string $username the username
-     * @param int    $page     the page number of the paginated result set
+     * @param string $username  the username
+     * @param int    $page      the page number of the paginated result set
+     * @param int    $perPage   the number of results per page
+     * @param string $sort      sort by (possible values: created, updated)
+     * @param string $direction direction of sort (possible values: asc, desc)
      *
      * @return array list of starred repositories
      */
-    public function starred($username, $page = 1)
+    public function starred($username, $page = 1, $perPage = 30, $sort = 'created', $direction = 'desc')
     {
-        return $this->get('users/'.rawurlencode($username).'/starred', array(
-            'page' => $page
+        return $this->get('/users/'.rawurlencode($username).'/starred', array(
+            'page' => $page,
+            'per_page' => $perPage,
+            'sort' => $sort,
+            'direction' => $direction,
         ));
     }
 
@@ -140,13 +158,13 @@ class User extends AbstractApi
      */
     public function subscriptions($username)
     {
-        return $this->get('users/'.rawurlencode($username).'/subscriptions');
+        return $this->get('/users/'.rawurlencode($username).'/subscriptions');
     }
 
     /**
-     * Get the repositories of a user.
+     * List public repositories for the specified user.
      *
-     * @link http://developer.github.com/v3/repos/
+     * @link https://developer.github.com/v3/repos/#list-user-repositories
      *
      * @param string $username  the username
      * @param string $type      role in the repository
@@ -157,11 +175,25 @@ class User extends AbstractApi
      */
     public function repositories($username, $type = 'owner', $sort = 'full_name', $direction = 'asc')
     {
-        return $this->get('users/'.rawurlencode($username).'/repos', array(
+        return $this->get('/users/'.rawurlencode($username).'/repos', [
             'type' => $type,
             'sort' => $sort,
-            'direction' => $direction
-        ));
+            'direction' => $direction,
+        ]);
+    }
+
+    /**
+     * List repositories that are accessible to the authenticated user.
+     *
+     * @link https://developer.github.com/v3/repos/#list-your-repositories
+     *
+     * @param array $params visibility, affiliation, type, sort, direction
+     *
+     * @return array list of the user repositories
+     */
+    public function myRepositories(array $params = [])
+    {
+        return $this->get('/user/repos', $params);
     }
 
     /**
@@ -175,7 +207,7 @@ class User extends AbstractApi
      */
     public function gists($username)
     {
-        return $this->get('users/'.rawurlencode($username).'/gists');
+        return $this->get('/users/'.rawurlencode($username).'/gists');
     }
 
     /**
@@ -189,7 +221,7 @@ class User extends AbstractApi
      */
     public function keys($username)
     {
-        return $this->get('users/'.rawurlencode($username).'/keys');
+        return $this->get('/users/'.rawurlencode($username).'/keys');
     }
 
     /**
@@ -203,6 +235,6 @@ class User extends AbstractApi
      */
     public function publicEvents($username)
     {
-        return $this->get('users/'.rawurlencode($username) . '/events/public');
+        return $this->get('/users/'.rawurlencode($username) . '/events/public');
     }
 }

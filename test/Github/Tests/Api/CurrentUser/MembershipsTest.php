@@ -35,7 +35,7 @@ class MembershipsTest extends TestCase
         $api = $this->getApiMock();
         $api->expects($this->once())
             ->method('get')
-            ->with('user/memberships/orgs')
+            ->with('/user/memberships/orgs')
             ->will($this->returnValue($expectedValue));
 
         $this->assertEquals($expectedValue, $api->all());
@@ -60,7 +60,7 @@ class MembershipsTest extends TestCase
         $api = $this->getApiMock();
         $api->expects($this->once())
             ->method('get')
-            ->with('user/memberships/orgs/invitocat')
+            ->with('/user/memberships/orgs/invitocat')
             ->will($this->returnValue($expectedValue));
 
         $this->assertEquals($expectedValue, $api->organization('invitocat'));
@@ -78,14 +78,17 @@ class MembershipsTest extends TestCase
         $api = $this->getApiMock();
         $api->expects($this->once())
             ->method('patch')
-            ->with('user/memberships/orgs/invitocat')
+            ->with('/user/memberships/orgs/invitocat')
             ->will($this->returnValue($expectedValue));
 
         $this->assertEquals($expectedValue, $api->edit('invitocat'));
     }
 
+    /**
+     * @return string
+     */
     protected function getApiClass()
     {
-        return 'Github\Api\CurrentUser\Memberships';
+        return \Github\Api\CurrentUser\Memberships::class;
     }
 }

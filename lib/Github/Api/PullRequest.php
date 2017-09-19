@@ -3,16 +3,50 @@
 namespace Github\Api;
 
 use Github\Api\PullRequest\Comments;
+use Github\Api\PullRequest\Review;
+use Github\Api\PullRequest\ReviewRequest;
+use Github\Exception\InvalidArgumentException;
 use Github\Exception\MissingArgumentException;
 
 /**
  * API for accessing Pull Requests from your Git/Github repositories.
  *
- * @link   http://developer.github.com/v3/pulls/
+ * @see   http://developer.github.com/v3/pulls/
+ *
  * @author Joseph Bielawski <stloyd@gmail.com>
  */
 class PullRequest extends AbstractApi
 {
+    use AcceptHeaderTrait;
+
+    /**
+     * Configure the body type.
+     *
+     * @link https://developer.github.com/v3/pulls/#custom-media-types
+     * @param string|null $bodyType
+     * @param string|null $apiVersion
+     *
+     * @return self
+     */
+    public function configure($bodyType = null, $apiVersion = null)
+    {
+        if (!in_array($apiVersion, array())) {
+            $apiVersion = $this->client->getApiVersion();
+        }
+
+        if (!in_array($bodyType, array('text', 'html', 'full', 'diff', 'patch'))) {
+            $bodyType = 'raw';
+        }
+
+        if (!in_array($bodyType, array('diff', 'patch'))) {
+            $bodyType .= '+json';
+        }
+
+        $this->acceptHeaderValue = sprintf('application/vnd.github.%s.%s', $apiVersion, $bodyType);
+
+        return $this;
+    }
+
     /**
      * Get a listing of a project's pull requests by the username, repository and (optionally) state.
      *
@@ -28,10 +62,10 @@ class PullRequest extends AbstractApi
     {
         $parameters = array_merge(array(
             'page' => 1,
-            'per_page' => 30
+            'per_page' => 30,
         ), $params);
 
-        return $this->get('repos/'.rawurlencode($username).'/'.rawurlencode($repository).'/pulls', $parameters);
+        return $this->get('/repos/'.rawurlencode($username).'/'.rawurlencode($repository).'/pulls', $parameters);
     }
 
     /**
@@ -47,22 +81,50 @@ class PullRequest extends AbstractApi
      */
     public function show($username, $repository, $id)
     {
-        return $this->get('repos/'.rawurlencode($username).'/'.rawurlencode($repository).'/pulls/'.rawurlencode($id));
+        return $this->get('/repos/'.rawurlencode($username).'/'.rawurlencode($repository).'/pulls/'.rawurlencode($id));
     }
 
     public function commits($username, $repository, $id)
     {
-        return $this->get('repos/'.rawurlencode($username).'/'.rawurlencode($repository).'/pulls/'.rawurlencode($id).'/commits');
+        return $this->get('/repos/'.rawurlencode($username).'/'.rawurlencode($repository).'/pulls/'.rawurlencode($id).'/commits');
     }
 
     public function files($username, $repository, $id)
     {
-        return $this->get('repos/'.rawurlencode($username).'/'.rawurlencode($repository).'/pulls/'.rawurlencode($id).'/files');
+        return $this->get('/repos/'.rawurlencode($username).'/'.rawurlencode($repository).'/pulls/'.rawurlencode($id).'/files');
+    }
+
+    /**
+     * All statuses which are the statuses of its head branch.
+     *
+     * @see http://developer.github.com/v3/pulls/
+     *
+     * @param string $username   the username
+     * @param string $repository the repository
+     * @param string $id         the ID of the pull request for which statuses are retrieved
+     *
+     * @return array array of statuses for the project
+     */
+    public function status($username, $repository, $id)
+    {
+        $link = $this->show($username, $repository, $id)['_links']['statuses']['href'];
+
+        return $this->get($link);
     }
 
     public function comments()
     {
         return new Comments($this->client);
+    }
+
+    public function reviews()
+    {
+        return new Review($this->client);
+    }
+
+    public function reviewRequests()
+    {
+        return new ReviewRequest($this->client);
     }
 
     /**
@@ -98,7 +160,7 @@ class PullRequest extends AbstractApi
             throw new MissingArgumentException(array('issue', 'body'));
         }
 
-        return $this->post('repos/'.rawurlencode($username).'/'.rawurlencode($repository).'/pulls', $params);
+        return $this->post('/repos/'.rawurlencode($username).'/'.rawurlencode($repository).'/pulls', $params);
     }
 
     public function update($username, $repository, $id, array $params)
@@ -107,18 +169,34 @@ class PullRequest extends AbstractApi
             $params['state'] = 'open';
         }
 
-        return $this->patch('repos/'.rawurlencode($username).'/'.rawurlencode($repository).'/pulls/'.rawurlencode($id), $params);
+        return $this->patch('/repos/'.rawurlencode($username).'/'.rawurlencode($repository).'/pulls/'.rawurlencode($id), $params);
     }
 
     public function merged($username, $repository, $id)
     {
-        return $this->get('repos/'.rawurlencode($username).'/'.rawurlencode($repository).'/pulls/'.rawurlencode($id).'/merge');
+        return $this->get('/repos/'.rawurlencode($username).'/'.rawurlencode($repository).'/pulls/'.rawurlencode($id).'/merge');
     }
 
-    public function merge($username, $repository, $id, $message = '')
+    public function merge($username, $repository, $id, $message, $sha, $mergeMethod = 'merge', $title = null)
     {
-        return $this->put('repos/'.rawurlencode($username).'/'.rawurlencode($repository).'/pulls/'.rawurlencode($id).'/merge', array(
-            'commit_message' => $message
-        ));
+        if (is_bool($mergeMethod)) {
+            $mergeMethod = $mergeMethod ? 'squash' : 'merge';
+        }
+
+        if (!in_array($mergeMethod, array('merge', 'squash', 'rebase'), true)) {
+            throw new InvalidArgumentException(sprintf('"$mergeMethod" must be one of ["merge", "squash", "rebase"] ("%s" given).', $mergeMethod));
+        }
+
+        $params = array(
+            'commit_message' => $message,
+            'sha' => $sha,
+            'merge_method' => $mergeMethod,
+        );
+
+        if (is_string($title)) {
+            $params['commit_title'] = $title;
+        }
+
+        return $this->put('/repos/'.rawurlencode($username).'/'.rawurlencode($repository).'/pulls/'.rawurlencode($id).'/merge', $params);
     }
 }

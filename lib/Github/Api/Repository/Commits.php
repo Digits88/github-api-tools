@@ -12,7 +12,7 @@ class Commits extends AbstractApi
 {
     public function all($username, $repository, array $params)
     {
-        return $this->get('repos/'.rawurlencode($username).'/'.rawurlencode($repository).'/commits', $params);
+        return $this->get('/repos/'.rawurlencode($username).'/'.rawurlencode($repository).'/commits', $params);
     }
 
     public function compare($username, $repository, $base, $head, $mediaType = null)
@@ -21,11 +21,12 @@ class Commits extends AbstractApi
         if (null !== $mediaType) {
             $headers['Accept'] = $mediaType;
         }
-        return $this->get('repos/'.rawurlencode($username).'/'.rawurlencode($repository).'/compare/'.rawurlencode($base).'...'.rawurlencode($head), array(), $headers);
+
+        return $this->get('/repos/'.rawurlencode($username).'/'.rawurlencode($repository).'/compare/'.rawurlencode($base).'...'.rawurlencode($head), array(), $headers);
     }
 
     public function show($username, $repository, $sha)
     {
-        return $this->get('repos/'.rawurlencode($username).'/'.rawurlencode($repository).'/commits/'.rawurlencode($sha));
+        return $this->get('/repos/'.rawurlencode($username).'/'.rawurlencode($repository).'/commits/'.rawurlencode($sha));
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Github\Api;
 
-use Github\Api\CurrentUser\DeployKeys;
+use Github\Api\CurrentUser\PublicKeys;
 use Github\Api\CurrentUser\Emails;
 use Github\Api\CurrentUser\Followers;
 use Github\Api\CurrentUser\Memberships;
@@ -19,12 +19,12 @@ class CurrentUser extends AbstractApi
 {
     public function show()
     {
-        return $this->get('user');
+        return $this->get('/user');
     }
 
     public function update(array $params)
     {
-        return $this->patch('user', $params);
+        return $this->patch('/user', $params);
     }
 
     /**
@@ -45,7 +45,7 @@ class CurrentUser extends AbstractApi
 
     public function followers($page = 1)
     {
-        return $this->get('user/followers', array(
+        return $this->get('/user/followers', array(
             'page' => $page
         ));
     }
@@ -60,15 +60,15 @@ class CurrentUser extends AbstractApi
      */
     public function issues(array $params = array(), $includeOrgIssues = true)
     {
-        return $this->get($includeOrgIssues ? 'issues' : 'user/issues', array_merge(array('page' => 1), $params));
+        return $this->get($includeOrgIssues ? '/issues' : '/user/issues', array_merge(array('page' => 1), $params));
     }
 
     /**
-     * @return DeployKeys
+     * @return PublicKeys
      */
     public function keys()
     {
-        return new DeployKeys($this->client);
+        return new PublicKeys($this->client);
     }
 
     /**
@@ -94,7 +94,7 @@ class CurrentUser extends AbstractApi
      */
     public function organizations()
     {
-        return $this->get('user/orgs');
+        return $this->get('/user/orgs');
     }
 
     /**
@@ -104,7 +104,7 @@ class CurrentUser extends AbstractApi
      */
     public function teams()
     {
-        return $this->get('user/teams');
+        return $this->get('/user/teams');
     }
 
     /**
@@ -112,13 +112,13 @@ class CurrentUser extends AbstractApi
      *
      * @param string $type      role in the repository
      * @param string $sort      sort by
-     * @param string $direction direction of sort, ask or desc
+     * @param string $direction direction of sort, asc or desc
      *
      * @return array
      */
     public function repositories($type = 'owner', $sort = 'full_name', $direction = 'asc')
     {
-        return $this->get('user/repos', array(
+        return $this->get('/user/repos', array(
             'type' => $type,
             'sort' => $sort,
             'direction' => $direction
@@ -138,7 +138,7 @@ class CurrentUser extends AbstractApi
      */
     public function watched($page = 1)
     {
-        return $this->get('user/watched', array(
+        return $this->get('/user/watched', array(
             'page' => $page
         ));
     }
@@ -156,16 +156,37 @@ class CurrentUser extends AbstractApi
      */
     public function starred($page = 1)
     {
-        return $this->get('user/starred', array(
+        return $this->get('/user/starred', array(
             'page' => $page
         ));
     }
-    
+
     /**
      *  @link https://developer.github.com/v3/activity/watching/#list-repositories-being-watched
      */
     public function subscriptions()
     {
-        return $this->get('user/subscriptions');
+        return $this->get('/user/subscriptions');
+    }
+
+    /**
+     * @link https://developer.github.com/v3/integrations/#list-installations-for-user
+     *
+     * @param array $params
+     */
+    public function installations(array $params = array())
+    {
+        return $this->get('/user/installations', array_merge(array('page' => 1), $params));
+    }
+
+    /**
+     * @link https://developer.github.com/v3/integrations/installations/#list-repositories-accessible-to-the-user-for-an-installation
+     *
+     * @param string $installationId  the ID of the Installation
+     * @param array $params
+     */
+    public function repositoriesByInstallation($installationId, array $params = array())
+    {
+        return $this->get(sprintf('/user/installations/%s/repositories', $installationId), array_merge(array('page' => 1), $params));
     }
 }

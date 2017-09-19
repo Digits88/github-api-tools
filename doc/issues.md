@@ -38,7 +38,7 @@ Returns an array of information about the issue.
 > Requires [authentication](security.md).
 
 ```php
-$client->api('issue')->create('KnpLabs', 'php-github-api', array('title' => 'The issue title', 'body' => 'The issue body');
+$client->api('issue')->create('KnpLabs', 'php-github-api', array('title' => 'The issue title', 'body' => 'The issue body'));
 ```
 
 Creates a new issue in the repo "php-github-api" of the user "KnpLabs". The issue is assigned to the authenticated user.
@@ -84,3 +84,15 @@ $client->api('issue')->all('KnpLabs', 'php-github-api', array('labels' => 'label
 ```
 
 Returns an array of issues matching the given label.
+
+### Lock an issue discussion
+
+```php
+$client->api('issue')->lock('KnpLabs', 'php-github-api', 4);
+```
+
+### Unlock an issue discussion
+
+```php
+$client->api('issue')->unlock('KnpLabs', 'php-github-api', 4);
+```

@@ -4,6 +4,20 @@
 Searching repositories, getting repository information and managing repository information for authenticated users.
 Wrap [GitHub Repo API](http://developer.github.com/v3/repos/). All methods are described on that page.
 
+### List all repositories
+
+#### Simple call
+
+```php
+$repos = $client->api('repo')->all();
+```
+
+#### Start from a specific repository id
+
+```php
+$repos = $client->api('repo')->all(1337);
+```
+
 ### Search repos by keyword
 
 #### Simple search
@@ -16,7 +30,7 @@ Returns a list of repositories.
 
 #### Advanced search
 
-You can filter the results by language. It takes the same values as the language drop down on [http://github.com/search](http://github).
+You can filter the results by language. It takes the same values as the language drop down on [http://github.com/search](http://github.com/search).
 
 ```php
 $repos = $client->api('repo')->find('chess', array('language' => 'php'));
@@ -30,8 +44,16 @@ $repos = $client->api('repo')->find('chess', array('language' => 'php', 'start_p
 
 ### Get extended information about a repository
 
+Using the username of the repository owner and the repository name:
+
 ```php
 $repo = $client->api('repo')->show('KnpLabs', 'php-github-api')
+```
+
+Or by using the repository id (note that this is at time of writing an undocumented feature, see [here](https://github.com/piotrmurach/github/issues/283) and [here](https://github.com/piotrmurach/github/issues/282)):
+
+```php
+$repo = $client->api('repo')->showById(123456)
 ```
 
 Returns an array of information about the specified repository.
@@ -121,6 +143,30 @@ $client->api('repo')->keys()->remove('username', 'reponame', 12345);
 ```
 
 Removes the key with id 12345 from the 'reponame' repository and returns a list of the deploy keys for the repository.
+
+### Add a hook to a repository
+
+> Requires [authentication](security.md).
+
+```php
+$client->api('repo')->hooks()->create('username', 'reponame', $params);
+```
+
+### Remove a hook from a repository
+
+> Requires [authentication](security.md).
+
+```php
+$client->api('repo')->hooks()->remove('username', 'reponame', $id);
+```
+
+### Return a list of all hooks for the 'reponame' repository
+
+> Requires [authentication](security.md).
+
+```php
+$client->api('repo')->hooks()->all('username', 'reponame');
+```
 
 ### Get the collaborators for a repository
 
@@ -253,7 +299,7 @@ $repo = ResponseMediator::getContent($data);
 ### Get the milestones of a repository
 
 ```php
-milestones = $client->api('repo')->milestones('ornicar', 'php-github-api');
+$milestones = $client->api('repo')->milestones('ornicar', 'php-github-api');
 ```
 
 Returns a list of milestones.
