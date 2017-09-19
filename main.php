@@ -29,9 +29,7 @@ $apicalls = 0;
 checkParams();
 
 // create client and authenticate
-$client = new \Github\Client(
-    new \Github\HttpClient\CachedHttpClient(array('cache_dir' => '/tmp/github-api-cache'))
-);
+$client = new \Github\Client();
 $foo = $client->authenticate($token,Github\Client::AUTH_HTTP_TOKEN);
 $apicalls++;
 print_r($foo);
