@@ -493,7 +493,8 @@ function manageTeams($client) {
       echo "\tdesired repos for team '$team' (" . count($desired_repos) . "): " . implode(", ",$desired_repos) . "\n";
 
       // get actual repos from github
-      $tmp = $client->api('organization')->teams()->repositories($ghteams[$team]);
+      //$tmp = $client->api('organization')->teams()->repositories($ghteams[$team]);
+      $tmp = $paginator->fetchAll($client->api('organization')->teams(),'repositories',array($ghteams[$team]));
       $apicalls++;
       //print_r($tmp);
       $actual_repos = array();
@@ -513,8 +514,8 @@ function manageTeams($client) {
       // remove repos
       foreach ( array_keys($actual_repos) as $repo )
 	if ( !in_array($repo,$desired_repos) ) {
-	  if ( !$dryrun )
-	    $client->api('organization')->teams()->removeRepository($ghteams[$team],$userorg,$repo);
+	  //if ( !$dryrun )
+	  //$client->api('organization')->teams()->removeRepository($ghteams[$team],$userorg,$repo);
           $apicalls++;
 	  echo "\tremoved $repo from team '$team'\n";
 	}
